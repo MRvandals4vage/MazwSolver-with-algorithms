@@ -10,7 +10,7 @@ This project implements and compares different algorithms for maze solving, incl
   - Depth First Search (DFS)
   - A* algorithm with Manhattan heuristic
   - A* algorithm with Euclidean heuristic
-- Pygame GUI for visualizing the maze-solving process
+- Comprehensive internal Web Dashboard for visualizing the algorithms interactively
 - Performance comparison between different algorithms
 
 ## Algorithms
@@ -28,10 +28,10 @@ An informed search algorithm that uses a heuristic function to guide its search 
 
 ## Visualization
 
-The project includes a Pygame GUI that visualizes the maze-solving process, showing:
-- The initial unsolved maze
-- The exploration process of the chosen algorithm
-- The final solved path
+The project includes an interactable Web Dashboard that visualizes the maze-solving process entirely natively in the browser, showing:
+- The generated unsolved maze geometry
+- The final solved optimal paths
+- The algorithmic nodes explored along the way
 
 <p float="left">
   <img src="https://raw.githubusercontent.com/nabobery/MAZE-SOLVER-USING-AI/main/Examples/maze_unsolved.png" width="400" />
@@ -40,7 +40,7 @@ The project includes a Pygame GUI that visualizes the maze-solving process, show
 </p>
 
 <p align="center">
-  <em>Unsolved Maze (left) vs Solved Maze (right)</em>
+  <em>Unsolved Maze Layout vs Algorithmic Solution Path</em>
 </p>
 
 ## Performance Comparison
@@ -103,7 +103,7 @@ For a more comprehensive understanding of the algorithms, implementation details
 - Implementation of BFS, DFS, and A* algorithms
 - Heuristic functions used in A* (Manhattan and Euclidean)
 - Performance comparisons and analysis
-- Visualization process using Pygame
+- Visualization process using the Web Dashboard
 
 The reports provide in-depth explanations and insights into the project's development and findings.
 
