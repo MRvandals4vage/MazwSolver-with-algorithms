@@ -23,7 +23,9 @@ app.get('/api/mazes', (req, res) => {
 // Generate new mazes
 app.post('/api/generate', (req, res) => {
     const { numMazes = 1, display = 1 } = req.body;
-    const pythonExe = path.join(PROJECT_DIR, '.venv', 'bin', 'python3');
+    const pythonExe = fs.existsSync(path.join(PROJECT_DIR, '.venv', 'bin', 'python3')) 
+        ? path.join(PROJECT_DIR, '.venv', 'bin', 'python3')
+        : 'python3';
     const cmd = `"${pythonExe}" maze_generator.py --display=${display} --num_mazes=${numMazes}`;
     
     exec(cmd, { cwd: PROJECT_DIR }, (error, stdout, stderr) => {
@@ -40,8 +42,10 @@ app.post('/api/solve', (req, res) => {
     const { algorithm, mazeFile, display = 1 } = req.body;
     let cmd = '';
     
-    // Use the venv python interpreter directly for proper modules resolution
-    const pythonExe = path.join(PROJECT_DIR, '.venv', 'bin', 'python3');
+    // Use the venv python interpreter directly, fallback to global Python3 for Deployment
+    const pythonExe = fs.existsSync(path.join(PROJECT_DIR, '.venv', 'bin', 'python3')) 
+        ? path.join(PROJECT_DIR, '.venv', 'bin', 'python3')
+        : 'python3';
 
     if (['astar', 'bfs', 'dfs'].includes(algorithm)) {
         cmd = `"${pythonExe}" ${algorithm}.py --display=${display} --maze_file=${mazeFile}`;
@@ -126,6 +130,13 @@ app.get('/api/history', (req, res) => {
     }
 });
 
-app.listen(3001, () => {
-    console.log('Server is running on port 3001');
+// Serve standard static React frontend
+app.use(express.static(path.join(__dirname, 'dist')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

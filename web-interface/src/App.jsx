@@ -112,7 +112,7 @@ function App() {
 
   const fetchMazes = async (autoSelectLatest = false) => {
     try {
-      const res = await fetch('http://localhost:3001/api/mazes');
+      const res = await fetch('/api/mazes');
       const data = await res.json();
       setMazes(data);
       if (data.length > 0) {
@@ -133,7 +133,7 @@ function App() {
     setStatus('running');
     addLog(`Generating ${numMazes} maze(s) natively...`);
     try {
-      const res = await fetch('http://localhost:3001/api/generate', {
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ numMazes, display: 0 }) // Always disable Pygame
@@ -162,7 +162,7 @@ function App() {
     setStatus('running');
     addLog(`Solving ${selectedMaze} using ${algorithm.toUpperCase()}...`);
     try {
-      const res = await fetch('http://localhost:3001/api/solve', {
+      const res = await fetch('/api/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ algorithm, mazeFile: selectedMaze, display: 0 }) // Always disable pygame
@@ -191,7 +191,7 @@ function App() {
     try {
       // 1. Fetch un-solved grid base
       const gridQuery = new URLSearchParams({ mazeFile: targetMaze });
-      const resGrid = await fetch(`http://localhost:3001/api/grid?${gridQuery}`);
+      const resGrid = await fetch(`/api/grid?${gridQuery}`);
       const dataGrid = await resGrid.json();
       if (!resGrid.ok) throw new Error(dataGrid.error);
       
@@ -201,7 +201,7 @@ function App() {
       if (mode === 'solved') {
           const algoParam = algorithm === 'astar' ? 'aStar' : algorithm;
           const histQuery = new URLSearchParams({ mazeFile: targetMaze, algorithm: algoParam });
-          const resHist = await fetch(`http://localhost:3001/api/history?${histQuery}`);
+          const resHist = await fetch(`/api/history?${histQuery}`);
           
           if (resHist.ok) {
               const histData = await resHist.json();
