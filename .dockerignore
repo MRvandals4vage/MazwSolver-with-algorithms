@@ -1,0 +1,7 @@
+.venv
+web-interface/node_modules
+web-interface/dist
+mazes_input/*.csv
+mazes_output/**/*.json
+mazes_output/**/*.csv
+__pycache__
