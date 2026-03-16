@@ -7,9 +7,8 @@ function App() {
   const [selectedMaze, setSelectedMaze] = useState('');
   const [algorithm, setAlgorithm] = useState('astar');
   const [numMazes, setNumMazes] = useState(1);
-  const [display, setDisplay] = useState(true);
   
-  const [logs, setLogs] = useState([{ type: 'info', text: 'Maze AI System Initialized.' }]);
+  const [logs, setLogs] = useState([{ type: 'info', text: 'Maze AI System Initialized. 100% Native Web Rendering.' }]);
   const [status, setStatus] = useState('idle'); // idle, running, error
   const logsEndRef = useRef(null);
   const canvasRef = useRef(null);
@@ -71,33 +70,44 @@ function App() {
     setLogs(prev => [...prev, { text, type }]);
   };
 
-  const fetchMazes = async () => {
+  const fetchMazes = async (autoSelectLatest = false) => {
     try {
       const res = await fetch('http://localhost:3001/api/mazes');
       const data = await res.json();
       setMazes(data);
-      if (data.length > 0 && !selectedMaze) {
-        setSelectedMaze(data[0]);
+      if (data.length > 0) {
+        if (autoSelectLatest || !selectedMaze) {
+          // Select the chronologically latest or highest number
+          const latest = [...data].sort((a, b) => b.localeCompare(a, undefined, {numeric: true}))[0];
+          setSelectedMaze(latest);
+          return latest;
+        }
       }
     } catch (err) {
       addLog('Failed to fetch maze list.', 'error');
     }
+    return null;
   };
 
   const handleGenerate = async () => {
     setStatus('running');
-    addLog(`Generating ${numMazes} maze(s) ${display ? 'with display' : ''}...`);
+    addLog(`Generating ${numMazes} maze(s) natively...`);
     try {
       const res = await fetch('http://localhost:3001/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numMazes, display: display ? 1 : 0 })
+        body: JSON.stringify({ numMazes, display: 0 }) // Always disable Pygame
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       addLog(data.stdout || data.message, 'success');
-      setStatus('idle');
-      fetchMazes();
+      
+      const latestMaze = await fetchMazes(true);
+      if (latestMaze) {
+         handleVisualize('original', latestMaze);
+      } else {
+         setStatus('idle');
+      }
     } catch (err) {
       addLog(err.message, 'error');
       setStatus('error');
@@ -115,61 +125,44 @@ function App() {
       const res = await fetch('http://localhost:3001/api/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ algorithm, mazeFile: selectedMaze, display: display ? 1 : 0 })
+        body: JSON.stringify({ algorithm, mazeFile: selectedMaze, display: 0 }) // Always disable pygame
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       addLog(data.stdout || data.message, 'success');
-      setStatus('idle');
+      
+      // Auto visualize after solving
+      handleVisualize('solved', selectedMaze);
     } catch (err) {
       addLog(err.message, 'error');
       setStatus('error');
     }
   };
 
-  const handleVisualize = async (mode = 'original') => {
-    if (!selectedMaze) {
+  const handleVisualize = async (mode = 'original', targetMazeOverride = null) => {
+    const targetMaze = targetMazeOverride || selectedMaze;
+    if (!targetMaze) {
       addLog('Please select a maze first.', 'error');
       return;
     }
     
-    if (display) {
-      setStatus('running');
-      addLog(`Visualizing ${mode === 'solved' ? 'solved ' : ''}${selectedMaze} in Pygame...`);
-      try {
-        const algoParam = mode === 'solved' ? (algorithm === 'astar' ? 'aStar' : algorithm) : '';
-        const res = await fetch('http://localhost:3001/api/visualize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ algorithm: algoParam, mazeFile: selectedMaze })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        addLog(data.stdout || data.message, 'success');
-        setStatus('idle');
-      } catch (err) {
-        addLog(err.message, 'error');
-        setStatus('error');
-      }
-    } else {
-      setStatus('running');
-      addLog(`Rendering ${mode === 'solved' ? 'solved ' : ''}${selectedMaze} natively...`);
-      try {
-        const algoParam = mode === 'solved' ? (algorithm === 'astar' ? 'aStar' : algorithm) : '';
-        const queryParams = new URLSearchParams({ mazeFile: selectedMaze });
-        if (algoParam) queryParams.append('algorithm', algoParam);
-        
-        const res = await fetch(`http://localhost:3001/api/grid?${queryParams}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        
-        setGridData(data.grid);
-        addLog('Successfully rendered maze.', 'success');
-        setStatus('idle');
-      } catch (err) {
-        addLog(err.message, 'error');
-        setStatus('error');
-      }
+    setStatus('running');
+    addLog(`Rendering ${mode === 'solved' ? 'solved ' : ''}${targetMaze} natively...`);
+    try {
+      const algoParam = mode === 'solved' ? (algorithm === 'astar' ? 'aStar' : algorithm) : '';
+      const queryParams = new URLSearchParams({ mazeFile: targetMaze });
+      if (algoParam) queryParams.append('algorithm', algoParam);
+      
+      const res = await fetch(`http://localhost:3001/api/grid?${queryParams}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setGridData(data.grid);
+      addLog('Successfully rendered maze to dashboard.', 'success');
+      setStatus('idle');
+    } catch (err) {
+      addLog(err.message, 'error');
+      setStatus('error');
     }
   };
 
@@ -198,25 +191,6 @@ function App() {
               <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
             </div>
           </div>
-
-          <div className="panel-title">
-            <Settings size={20} />
-            Global Settings
-          </div>
-
-          <div className="control-group">
-            <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={display} 
-                onChange={(e) => setDisplay(e.target.checked)} 
-              />
-              <span className="slider"></span>
-              <span className="toggle-label">Enable Pygame Display</span>
-            </label>
-          </div>
-
-          <div style={{ margin: '1rem 0', borderTop: '1px solid var(--panel-border)' }}></div>
 
           <div className="panel-title">
             <Box size={20} />
@@ -320,7 +294,7 @@ function App() {
             System Console & Visualizer
           </div>
           
-          {gridData && !display && (
+          {gridData && (
             <div style={{ display: 'flex', justifyContent: 'center', margin: '1rem 0', overflow: 'auto' }}>
               <canvas 
                 ref={canvasRef} 
@@ -343,7 +317,7 @@ function App() {
             <div ref={logsEndRef} />
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textAlign: 'center' }}>
-             Execution outputs and python script status appear here. Display windows will open externally.
+             Execution outputs and python script status appear here. Visualizations are fully embedded.
           </div>
         </div>
 
