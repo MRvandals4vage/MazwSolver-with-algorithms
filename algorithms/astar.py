@@ -1,5 +1,6 @@
-import pygame, time, csv, argparse
-import numpy as np
+# pyre-ignore-all-errors
+import pygame, time, argparse, csv # type: ignore
+import numpy as np # type: ignore
 from time import sleep
 from queue import PriorityQueue
 from itertools import count
@@ -196,7 +197,7 @@ if __name__ == "__main__":
             # draw
             for row in range(num_rows):
                 for column in range(num_columns):
-                    color = idx_to_color[int(grid[row, column])]
+                    color = idx_to_color[int(grid[row, column])] # type: ignore
                     pygame.draw.rect(screen, color, [(margin + width) * column + margin, (margin + height) * row + margin,width, height])
 
             # set limit to 60 frames per second
@@ -225,7 +226,7 @@ if __name__ == "__main__":
             
                 for row in range(num_rows):
                     for column in range(num_columns):
-                        color = idx_to_color[grid[row, column]]
+                        color = idx_to_color[grid[row, column]] # type: ignore
                         pygame.draw.rect(screen, color, [(margin + width) * column + margin, (margin + height) * row + margin,width, height])
 
                 clock.tick(60) # set limit to 60 frames per second
@@ -260,9 +261,18 @@ if __name__ == "__main__":
         grid[-1, -1] = 3
 
     # export maze to .csv file
-    with open(f"../mazes_output/astar/astar_{args.maze_file}", "w", newline="") as f:
+    csv_path = f"../mazes_output/astar/astar_{args.maze_file}"
+    with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(grid)
+
+    import json
+    history = {
+        "explored": [[int(pos[0]), int(pos[1])] for pos in explored],
+        "path": [[int(pos[0]), int(pos[1])] for pos in solution]
+    }
+    with open(csv_path.replace('.csv', '.json'), "w") as f:
+        json.dump(history, f)
 
     print(f"--- finished {time.time()-start_time:.3f} s---")
     exit(0)

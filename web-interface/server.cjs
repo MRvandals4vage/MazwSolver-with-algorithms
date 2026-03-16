@@ -104,6 +104,28 @@ app.get('/api/grid', (req, res) => {
     }
 });
 
+// Fetch history of exploration to animate natively in React
+app.get('/api/history', (req, res) => {
+    const { algorithm, mazeFile } = req.query;
+    let algoFolder = algorithm;
+    if (algorithm === 'aStar') algoFolder = 'astar';
+    let prefix = algorithm;
+    if (algorithm === 'aStar') prefix = 'astar';
+    
+    const filePath = path.join(PROJECT_DIR, 'mazes_output', algoFolder, `${prefix}_${mazeFile}`.replace('.csv', '.json'));
+    
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'History file not found.' });
+    }
+    
+    try {
+        const history = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        res.json(history);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to parse history' });
+    }
+});
+
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
 });

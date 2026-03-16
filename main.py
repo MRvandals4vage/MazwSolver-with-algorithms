@@ -1,5 +1,5 @@
-import pygame, time, csv, argparse
-import numpy as np
+import pygame, argparse, time # type: ignore
+import numpy as np # type: ignore
 
 def main():
     start_time = time.time()
