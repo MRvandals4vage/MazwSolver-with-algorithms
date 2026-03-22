@@ -102,7 +102,10 @@ function App() {
          }
 
          const totalSteps = nodesToAnimate.length;
-         let speed = animSpeed; // Number of steps to draw per frame
+         // Make speeds physically slower by dividing the slider value.
+         // A slider value of 1 equals 1/3 of a step per frame (or 1 step every 3 frames).
+         let speed = animSpeed / 3; 
+         let stepAccumulator = 0;
 
           const renderFrame = () => {
              // We no longer need manual cleanup on the main canvas!
@@ -111,8 +114,13 @@ function App() {
                  headCtx.clearRect(0, 0, headCanvas.width, headCanvas.height);
              }
 
+             // Accumulate fractional steps
+             stepAccumulator += speed;
+             const stepsThisFrame = Math.floor(stepAccumulator);
+             stepAccumulator -= stepsThisFrame;
+
              // Paint multiple steps based on speed ON THE MAIN CANVAS
-             for (let i = 0; i < speed; i++) {
+             for (let i = 0; i < stepsThisFrame; i++) {
                  if (step < totalSteps) {
                      const { r, c, type } = nodesToAnimate[step];
                      if (gridData[r][c] !== 2 && gridData[r][c] !== 3) {
@@ -131,8 +139,8 @@ function App() {
                  const cx = margin + (width + margin) * lastDrawn.c;
                  const cy = margin + (height + margin) * lastDrawn.r;
                  
-                 // Make the head 2.5x the size of the block so it's impossible to miss!
-                 const headSize = width * 2.5;
+                 // Make the head 4x the size of the block! (Bigger character head)
+                 const headSize = width * 4.0;
                  const offset = (headSize - width) / 2;
                  
                  // Add fun shadow to the head
